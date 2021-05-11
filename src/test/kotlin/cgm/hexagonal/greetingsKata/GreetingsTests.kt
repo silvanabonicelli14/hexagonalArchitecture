@@ -17,9 +17,22 @@ class GreetingsTests {
             Ann, Mary, 1975/09/11, mary.ann@foobar.com
         """.trimIndent()
 
+        val listOfPerson = getListOfPerson(sourcePerson)
+
+        val listOfBirthdays = findPerson(listOfPerson)
+
+
+        SendGreetingsService().sendMessagesTo(listOfBirthdays) shouldBe """
+            Subject: Happy birthday!
+
+            Happy birthday, dear John!
+        """.trimIndent()
+    }
+
+    private fun getListOfPerson(sourcePerson: String): List<Person> {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
-        val listOfPerson = csvParser.map { record ->
+        return csvParser.map { record ->
             Person(
                 record[1],
                 record[0],
@@ -27,26 +40,14 @@ class GreetingsTests {
                 record[3]
             )
         }
+    }
 
+    private fun findPerson(listOfPerson: List<Person>): List<Person> {
         val today = LocalDate.now()
-        val listOfBirthdays =
-            listOfPerson.filter {
-                    person -> person.dateOfBirth.month == today.month
-                    && person.dateOfBirth.dayOfMonth == today.dayOfMonth }
-
-        MyService().sendMessagesTo(listOfBirthdays) shouldBe """
-            Subject: Happy birthday!
-
-            Happy birthday, dear John!
-        """.trimIndent()
+        return listOfPerson.filter { person -> person.dateOfBirth.month == today.month
+                                    && person.dateOfBirth.dayOfMonth == today.dayOfMonth
+        }
     }
-}
-
-object PersonRepository {
-    fun findBirthdays(listOfPerson: List<Person>): List<Person> {
-        TODO("Not yet implemented")
-    }
-
 }
 
 class Person(
@@ -56,7 +57,7 @@ class Person(
     val email: String
 )
 
-class MyService {
+class SendGreetingsService {
     fun sendMessagesTo(listOfPerson: List<Person>): String {
         return """
             Subject: Happy birthday!
