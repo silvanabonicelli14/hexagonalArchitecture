@@ -1,8 +1,7 @@
 package cgm.hexagonal.greetingsKata
 
-import cgm.hexagonal.greetingsKata.domain.models.GreetingMessage
 import cgm.hexagonal.greetingsKata.domain.usecases.GreetingsService
-import cgm.hexagonal.greetingsKata.doors.repositories.PersonRepository
+import cgm.hexagonal.greetingsKata.doors.repositories.CSVPersonRepository
 import cgm.hexagonal.greetingsKata.doors.sendservices.GreetingsSendService
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -18,14 +17,15 @@ class GreetingsTests {
         """.trimIndent()
 
         val today = LocalDate.of(2021, 10, 8)
-        GreetingsService(PersonRepository(sourcePerson), GreetingsSendService()).greetPersons(today) shouldBe listOf(
-            GreetingMessage(
+        var listOfMessages = mutableListOf<String>()
+        GreetingsService(CSVPersonRepository(sourcePerson),GreetingsSendService(listOfMessages)) .greetPersons(today)
+
+        listOfMessages shouldBe listOf(
                 """
                             Subject: Happy birthday!
                 
                             Happy birthday, dear John!
                       """.trimIndent()
-            )
         )
     }
 }

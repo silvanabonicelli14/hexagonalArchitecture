@@ -1,5 +1,6 @@
 package cgm.hexagonal.greetingsKata.doors.repositories
 
+import cgm.hexagonal.greetingsKata.domain.doors.PersonRepository
 import cgm.hexagonal.greetingsKata.domain.models.Person
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -7,8 +8,8 @@ import org.apache.commons.csv.CSVRecord
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class PersonRepository(private val sourcePerson: String) {
-    fun getPersons(): List<Person> {
+class CSVPersonRepository(private val sourcePerson: String): PersonRepository {
+    override fun getPersons(): List<Person> {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
         return csvParser.map { record -> mapCsvToRecord(record)}

@@ -11,5 +11,4 @@ object BirthdayMessageTemplate {
                 Happy birthday, dear $firstName!
             """.trimIndent()
         )
-
 }
