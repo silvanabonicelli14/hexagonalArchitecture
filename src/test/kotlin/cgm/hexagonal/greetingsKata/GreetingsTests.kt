@@ -31,12 +31,12 @@ class GreetingsTests {
 }
 
 class GreetingsService(private val personRepository: PersonRepository) {
-    fun greetPersons(filterDate: LocalDate): List<GreetingMessage> {
-        val listOfBirthdays = personRepository.findPerson(filterDate)
-        return createGreetings(listOfBirthdays)
-    }
+    fun greetPersons(filterDate: LocalDate): List<GreetingMessage> =
+        personRepository.getPersons()
+            .filter { person -> person.isPersonBirthday(filterDate)}
+            .run{sendGreetings(this)}
 
-    private fun createGreetings(listOfPerson: List<Person>): List<GreetingMessage> {
+    private fun sendGreetings(listOfPerson: List<Person>): List<GreetingMessage> {
         var listOfGreetings = mutableListOf<GreetingMessage>()
          listOfPerson.forEach{listOfGreetings.add(BirthdayMessageTemplate.birthdayMessage(it.firstName))}
         return listOfGreetings
