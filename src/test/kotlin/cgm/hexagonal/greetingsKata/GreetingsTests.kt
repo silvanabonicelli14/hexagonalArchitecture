@@ -4,6 +4,8 @@ import io.kotest.matchers.shouldBe
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 class GreetingsTests {
@@ -18,10 +20,21 @@ class GreetingsTests {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
         val listOfPerson = csvParser.map { record ->
-            Person(record[1],record[0],record[2],record[3])
+            Person(
+                record[1],
+                record[0],
+                LocalDate.parse(record[2].trim(), DateTimeFormatter.ofPattern("yyyy/MM/dd")),
+                record[3]
+            )
         }
 
-        MyService().sendMessagesTo(listOfPerson) shouldBe """
+        val today = LocalDate.now()
+        val listOfBirthdays =
+            listOfPerson.filter {
+                    person -> person.dateOfBirth.month == today.month
+                    && person.dateOfBirth.dayOfMonth == today.dayOfMonth }
+
+        MyService().sendMessagesTo(listOfBirthdays) shouldBe """
             Subject: Happy birthday!
 
             Happy birthday, dear John!
@@ -29,10 +42,17 @@ class GreetingsTests {
     }
 }
 
+object PersonRepository {
+    fun findBirthdays(listOfPerson: List<Person>): List<Person> {
+        TODO("Not yet implemented")
+    }
+
+}
+
 class Person(
     val firstName: String,
     val lastName: String,
-    val dateOfBirth: String,
+    val dateOfBirth: LocalDate,
     val email: String
 )
 
