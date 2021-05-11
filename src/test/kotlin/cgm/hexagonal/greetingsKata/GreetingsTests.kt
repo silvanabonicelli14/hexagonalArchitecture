@@ -17,9 +17,9 @@ class GreetingsTests {
             Ann, Mary, 1975/09/11, mary.ann@foobar.com
         """.trimIndent()
 
-        val listOfPerson = getListOfPerson(sourcePerson)
+        val listOfPerson = PersonRepository().getPersons(sourcePerson)
 
-        val listOfBirthdays = findPerson(listOfPerson)
+        val listOfBirthdays = PersonRepository().findPerson(listOfPerson)
 
 
         SendGreetingsService().sendMessagesTo(listOfBirthdays) shouldBe """
@@ -29,7 +29,9 @@ class GreetingsTests {
         """.trimIndent()
     }
 
-    private fun getListOfPerson(sourcePerson: String): List<Person> {
+}
+class PersonRepository(){
+    fun getPersons(sourcePerson: String): List<Person> {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
         return csvParser.map { record ->
@@ -42,10 +44,10 @@ class GreetingsTests {
         }
     }
 
-    private fun findPerson(listOfPerson: List<Person>): List<Person> {
+    fun findPerson(listOfPerson: List<Person>): List<Person> {
         val today = LocalDate.now()
         return listOfPerson.filter { person -> person.dateOfBirth.month == today.month
-                                    && person.dateOfBirth.dayOfMonth == today.dayOfMonth
+                && person.dateOfBirth.dayOfMonth == today.dayOfMonth
         }
     }
 }
@@ -66,5 +68,3 @@ class SendGreetingsService {
         """.trimIndent()
     }
 }
-
-
