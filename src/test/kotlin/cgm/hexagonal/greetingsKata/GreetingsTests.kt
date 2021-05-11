@@ -1,6 +1,7 @@
 package cgm.hexagonal.greetingsKata
 
 import cgm.hexagonal.greetingsKata.domain.models.GreetingMessage
+import cgm.hexagonal.greetingsKata.domain.usecases.GreetingsService
 import cgm.hexagonal.greetingsKata.doors.repositories.PersonRepository
 import cgm.hexagonal.greetingsKata.doors.sendservices.GreetingsSendService
 import io.kotest.matchers.shouldBe
@@ -17,7 +18,7 @@ class GreetingsTests {
         """.trimIndent()
 
         val today = LocalDate.of(2021, 10, 8)
-        GreetingsService(PersonRepository(sourcePerson),GreetingsSendService()).greetPersons(today) shouldBe listOf(
+        GreetingsService(PersonRepository(sourcePerson), GreetingsSendService()).greetPersons(today) shouldBe listOf(
             GreetingMessage(
                 """
                             Subject: Happy birthday!
@@ -27,12 +28,5 @@ class GreetingsTests {
             )
         )
     }
-}
-
-class GreetingsService(private val personRepository: PersonRepository, private val sendService: GreetingsSendService) {
-    fun greetPersons(filterDate: LocalDate): List<GreetingMessage> =
-        personRepository.getPersons()
-            .filter { person -> person.isPersonBirthday(filterDate)}
-            .run{sendService.sendGreetings(this)}
 }
 
