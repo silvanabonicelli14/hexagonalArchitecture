@@ -5,8 +5,6 @@ import cgm.hexagonal.greetingsKata.domain.doors.PersonRepository
 import cgm.hexagonal.greetingsKata.domain.doors.SendService
 import cgm.hexagonal.greetingsKata.domain.models.GreetingMessage
 import cgm.hexagonal.greetingsKata.domain.models.Person
-import cgm.hexagonal.greetingsKata.doors.repositories.CSVPersonRepository
-import cgm.hexagonal.greetingsKata.doors.sendservices.GreetingsSendService
 import java.time.LocalDate
 
 class GreetingsService(private val personRepository: PersonRepository, private val sendService: SendService) {

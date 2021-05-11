@@ -17,7 +17,7 @@ class GreetingsTests {
         """.trimIndent()
 
         val today = LocalDate.of(2021, 10, 8)
-        var listOfMessages = mutableListOf<String>()
+        val listOfMessages = mutableListOf<String>()
         GreetingsService(CSVPersonRepository(sourcePerson),GreetingsSendService(listOfMessages)) .greetPersons(today)
 
         listOfMessages shouldBe listOf(
