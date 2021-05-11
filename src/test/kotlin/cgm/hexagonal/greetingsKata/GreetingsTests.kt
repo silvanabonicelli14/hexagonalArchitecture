@@ -17,20 +17,19 @@ class GreetingsTests {
             Ann, Mary, 1975/09/11, mary.ann@foobar.com
         """.trimIndent()
 
-        GreetingsService.greetPersons(sourcePerson,LocalDate.now()) shouldBe """
+        GreetingsService(PersonRepository(sourcePerson)).greetPersons(LocalDate.now()) shouldBe """
             Subject: Happy birthday!
 
             Happy birthday, dear John!
         """.trimIndent()
     }
-
 }
 
 
-object GreetingsService {
-    fun greetPersons(sourcePerson: String, now: LocalDate): String {
-        val listOfPerson = PersonRepository(sourcePerson).getPersons()
-        val listOfBirthdays = PersonRepository(sourcePerson).findPerson(listOfPerson, LocalDate.now())
+class GreetingsService(private val personRepository: PersonRepository) {
+    fun greetPersons(filterDate: LocalDate): String {
+        val listOfPerson = personRepository.getPersons()
+        val listOfBirthdays = personRepository.findPerson(listOfPerson, filterDate)
         return sendMessagesTo(listOfBirthdays)
     }
 
