@@ -7,59 +7,63 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-
 class GreetingsTests {
     @Test
     internal fun name() {
-        var sourcePerson = """
+        val sourcePerson = """
             last_name, first_name, date_of_birth, email
-            Doe, John, 1982/10/08, john.doe@foobar.com
+            Doe, John, 1982/05/11, john.doe@foobar.com
             Ann, Mary, 1975/09/11, mary.ann@foobar.com
         """.trimIndent()
 
-        GreetingsService(PersonRepository(sourcePerson)).greetPersons(LocalDate.now()) shouldBe """
+        GreetingsService(PersonRepository(sourcePerson)).greetPersons(LocalDate.now()) shouldBe
+                listOf("""
             Subject: Happy birthday!
 
             Happy birthday, dear John!
-        """.trimIndent()
+        """.trimIndent())
     }
 }
 
-
 class GreetingsService(private val personRepository: PersonRepository) {
-    fun greetPersons(filterDate: LocalDate): String {
-        val listOfPerson = personRepository.getPersons()
-        val listOfBirthdays = personRepository.findPerson(listOfPerson, filterDate)
+    fun greetPersons(filterDate: LocalDate): List<String> {
+        val listOfBirthdays = personRepository.findPerson(filterDate)
         return sendMessagesTo(listOfBirthdays)
     }
 
-    private fun sendMessagesTo(listOfPerson: List<Person>): String {
-        return """
-            Subject: Happy birthday!
-
-            Happy birthday, dear John!
-        """.trimIndent()
+    private fun sendMessagesTo(listOfPerson: List<Person>): List<String> {
+        var listOfGreetings = mutableListOf<String>()
+         listOfPerson.forEach{listOfGreetings.add(createGreeting(it.firstName))}
+        return listOfGreetings
     }
+
+    private fun createGreeting(firstName: String): String =
+            """
+                Subject: Happy birthday!
+    
+                Happy birthday, dear $firstName!
+            """.trimIndent()
 
 }
 
 class PersonRepository(private val sourcePerson: String) {
-    fun getPersons(): List<Person> {
+    fun findPerson(filterDate: LocalDate): List<Person> {
+        return getPersons().filter { person ->
+            person.dateOfBirth.month == filterDate.month
+                    && person.dateOfBirth.dayOfMonth == filterDate.dayOfMonth
+        }
+    }
+
+    private fun getPersons(): List<Person> {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
         return csvParser.map { record ->
             Person(
-                record[1],
-                record[0],
+                record[1].trimIndent(),
+                record[0].trimIndent(),
                 LocalDate.parse(record[2].trim(), DateTimeFormatter.ofPattern("yyyy/MM/dd")),
-                record[3]
+                record[3].trimIndent()
             )
-        }
-    }
-
-    fun findPerson(listOfPerson: List<Person>, filterDate: LocalDate): List<Person> {
-        return listOfPerson.filter { person -> person.dateOfBirth.month == filterDate.month
-                && person.dateOfBirth.dayOfMonth == filterDate.dayOfMonth
         }
     }
 }
