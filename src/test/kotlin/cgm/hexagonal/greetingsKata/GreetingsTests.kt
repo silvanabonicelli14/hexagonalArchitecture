@@ -17,12 +17,7 @@ class GreetingsTests {
             Ann, Mary, 1975/09/11, mary.ann@foobar.com
         """.trimIndent()
 
-        val listOfPerson = PersonRepository().getPersons(sourcePerson)
-
-        val listOfBirthdays = PersonRepository().findPerson(listOfPerson)
-
-
-        SendGreetingsService().sendMessagesTo(listOfBirthdays) shouldBe """
+        GreetingsService.greetPersons(sourcePerson,LocalDate.now()) shouldBe """
             Subject: Happy birthday!
 
             Happy birthday, dear John!
@@ -30,8 +25,27 @@ class GreetingsTests {
     }
 
 }
-class PersonRepository(){
-    fun getPersons(sourcePerson: String): List<Person> {
+
+
+object GreetingsService {
+    fun greetPersons(sourcePerson: String, now: LocalDate): String {
+        val listOfPerson = PersonRepository(sourcePerson).getPersons()
+        val listOfBirthdays = PersonRepository(sourcePerson).findPerson(listOfPerson, LocalDate.now())
+        return sendMessagesTo(listOfBirthdays)
+    }
+
+    private fun sendMessagesTo(listOfPerson: List<Person>): String {
+        return """
+            Subject: Happy birthday!
+
+            Happy birthday, dear John!
+        """.trimIndent()
+    }
+
+}
+
+class PersonRepository(private val sourcePerson: String) {
+    fun getPersons(): List<Person> {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(sourcePerson, csvFormat)
         return csvParser.map { record ->
@@ -44,10 +58,9 @@ class PersonRepository(){
         }
     }
 
-    fun findPerson(listOfPerson: List<Person>): List<Person> {
-        val today = LocalDate.now()
-        return listOfPerson.filter { person -> person.dateOfBirth.month == today.month
-                && person.dateOfBirth.dayOfMonth == today.dayOfMonth
+    fun findPerson(listOfPerson: List<Person>, filterDate: LocalDate): List<Person> {
+        return listOfPerson.filter { person -> person.dateOfBirth.month == filterDate.month
+                && person.dateOfBirth.dayOfMonth == filterDate.dayOfMonth
         }
     }
 }
@@ -58,13 +71,3 @@ class Person(
     val dateOfBirth: LocalDate,
     val email: String
 )
-
-class SendGreetingsService {
-    fun sendMessagesTo(listOfPerson: List<Person>): String {
-        return """
-            Subject: Happy birthday!
-
-            Happy birthday, dear John!
-        """.trimIndent()
-    }
-}
