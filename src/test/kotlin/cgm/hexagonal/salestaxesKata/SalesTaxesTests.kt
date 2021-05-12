@@ -26,7 +26,7 @@ class SalesTaxesTests {
         """.trimIndent()
 
         var receipt = Receipt(0.0,0.0,listOf<SaleArticle>())
-        ReceiptService(SaleArticleRepository(dataSourceArticle),PriceCalculator(receipt)).closeReceipt()
+        ReceiptService(SaleArticleRepository(dataSourceArticle),PriceCalculator(receipt, TaxCalculator())).closeReceipt()
 
         receipt.totalPrice shouldBe 2.0
         receipt.totalTax shouldBe 2.0
@@ -39,11 +39,20 @@ class SalesTaxesTests {
         receipt shouldBe   Receipt(2.0,2.0,listOf(expectedArt1,expectedArt2))
     }
 }
+class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val priceCalculator: PriceCalculator) {
+    fun closeReceipt() {
+        saleArticleRepository.getSale()
+            .apply{
+                priceCalculator.calculateTotalPrices(this)
+                priceCalculator.printReceipt(this)
+            }
+    }
+}
 
-class PriceCalculator(private val receipt: Receipt){
+class PriceCalculator(private val receipt: Receipt, private val taxCalculator: TaxCalculator){
 
     fun calculateTotalPrices(sale: Sale) {
-        sale.salesList.forEach { it.tax += getTaxes(it.article, sale.country) }
+        sale.salesList.forEach { it.tax += taxCalculator.getTaxes(it.article, sale.country) }
         sale.salesList.forEach { it.taxedPrice = calculatePrice(it, it.tax) }
     }
 
@@ -56,8 +65,10 @@ class PriceCalculator(private val receipt: Receipt){
     private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
         return (saleArticle.article.price * saleArticle.quantity) * (1 + tax)
     }
+}
 
-    private fun getTaxes(article: Article, countryOfSale: Country): Double {
+class TaxCalculator{
+    fun getTaxes(article: Article, countryOfSale: Country): Double {
         val listOfExemptions  = mutableListOf(Category.Book, Category.Food, Category.Medical)
         var tax = 0.0
         if (article.country != countryOfSale) tax += 0.05
@@ -65,19 +76,6 @@ class PriceCalculator(private val receipt: Receipt){
 
         return tax
     }
-
-}
-
-class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val priceCalculator: PriceCalculator) {
-    fun closeReceipt() {
-        saleArticleRepository.getSale()
-            .apply{
-                priceCalculator.calculateTotalPrices(this)
-                priceCalculator.printReceipt(this)
-            }
-    }
-
-
 }
 
 class SaleArticleRepository(private val dataSourceArticle: String) {
@@ -106,7 +104,4 @@ val Double.roundedDouble: Double
     get() {
         return (this * 100).roundToLong() / 100.0
     }
-
-class Sale(val country: Country, val salesList: List<SaleArticle>) {
-}
 
