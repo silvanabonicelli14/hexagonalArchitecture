@@ -1,5 +1,6 @@
 package cgm.hexagonal.salestaxesKata
 
+import cgm.hexagonal.salestaxesKata.domain.models.*
 import io.kotest.matchers.shouldBe
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -8,8 +9,8 @@ import org.junit.jupiter.api.Test
 import kotlin.math.roundToLong
 
 class SalesTaxesTests {
-    private val expectedArt1 =  SaleArticle(Article("ART1",1.0,Category.Food,Country("ITA")),1.0)
-    private val expectedArt2 =  SaleArticle(Article("ART2",1.0,Category.Other,Country("SPA")),1.0)
+    private val expectedArt1 =  SaleArticle(Article("ART1",1.0, Category.Food, Country("ITA")),1.0)
+    private val expectedArt2 =  SaleArticle(Article("ART2",1.0, Category.Other, Country("SPA")),1.0)
     init {
         expectedArt1.tax = 1.5
         expectedArt2.tax = 1.5
@@ -25,7 +26,7 @@ class SalesTaxesTests {
         """.trimIndent()
 
         var receipt = Receipt(0.0,0.0,listOf<SaleArticle>())
-        ReceiptService(SaleArticleRepository(dataSourceArticle),receipt).closeReceipt()
+        ReceiptService(SaleArticleRepository(dataSourceArticle),PriceCalculator(receipt)).closeReceipt()
 
         receipt.totalPrice shouldBe 2.0
         receipt.totalTax shouldBe 2.0
@@ -39,13 +40,20 @@ class SalesTaxesTests {
     }
 }
 
-object PriceCalculator{
-     fun calculateTotalPrices(sale: Sale) {
+class PriceCalculator(private val receipt: Receipt){
+
+    fun calculateTotalPrices(sale: Sale) {
         sale.salesList.forEach { it.tax += getTaxes(it.article, sale.country) }
         sale.salesList.forEach { it.taxedPrice = calculatePrice(it, it.tax) }
     }
 
-     private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
+    fun printReceipt(sale: Sale) {
+        receipt.totalPrice = 2.0
+        receipt.totalTax = 2.0
+        receipt.saleArticles = sale.salesList
+    }
+
+    private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
         return (saleArticle.article.price * saleArticle.quantity) * (1 + tax)
     }
 
@@ -60,20 +68,15 @@ object PriceCalculator{
 
 }
 
-class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val receipt: Receipt) {
+class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val priceCalculator: PriceCalculator) {
     fun closeReceipt() {
         saleArticleRepository.getSale()
             .apply{
-                PriceCalculator.calculateTotalPrices(this)
-                printReceipt(this)
+                priceCalculator.calculateTotalPrices(this)
+                priceCalculator.printReceipt(this)
             }
     }
 
-    private fun printReceipt(sale: Sale) {
-        receipt.totalPrice = 2.0
-        receipt.totalTax = 2.0
-        receipt.saleArticles = sale.salesList
-    }
 
 }
 
@@ -99,34 +102,11 @@ class SaleArticleRepository(private val dataSourceArticle: String) {
     )
 }
 
-enum class Category {
-    Medical,
-    Book,
-    Food,
-    Other
-}
-
 val Double.roundedDouble: Double
     get() {
         return (this * 100).roundToLong() / 100.0
     }
 
-class Sale(val country: Country,val salesList: List<SaleArticle>) {
+class Sale(val country: Country, val salesList: List<SaleArticle>) {
 }
 
-data class Country(val country: String)
-
-data class SaleArticle(val article: Article, val quantity: Double) {
-    var taxedPrice: Double = 0.0
-    var tax: Double = 0.0
-}
-
-data class Article(
-    val code: String,
-    val price: Double,
-    val category: Category,
-    val country: Country
-)
-
-
-data class Receipt(var totalPrice: Double, var totalTax: Double, var saleArticles: List<SaleArticle>)
