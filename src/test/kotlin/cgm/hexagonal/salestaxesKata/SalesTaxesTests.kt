@@ -26,7 +26,7 @@ class SalesTaxesTests {
         """.trimIndent()
 
         var receipt = Receipt(0.0,0.0,listOf<SaleArticle>())
-        ReceiptService(SaleArticleRepository(dataSourceArticle),PriceCalculator(receipt, TaxCalculator())).closeReceipt()
+        ReceiptService(SaleArticleRepository(dataSourceArticle),TaxPriceCalculator(receipt)).closeReceipt()
 
         receipt.totalPrice shouldBe 2.0
         receipt.totalTax shouldBe 2.0
@@ -39,7 +39,7 @@ class SalesTaxesTests {
         receipt shouldBe   Receipt(2.0,2.0,listOf(expectedArt1,expectedArt2))
     }
 }
-class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val priceCalculator: PriceCalculator) {
+class ReceiptService(private val saleArticleRepository: ArticleRepository, private val priceCalculator: PriceCalculator) {
     fun closeReceipt() {
         saleArticleRepository.getSale()
             .apply{
@@ -49,14 +49,19 @@ class ReceiptService(private val saleArticleRepository: SaleArticleRepository, p
     }
 }
 
-class PriceCalculator(private val receipt: Receipt, private val taxCalculator: TaxCalculator){
+interface PriceCalculator {
+    fun calculateTotalPrices(sale: Sale)
+    fun printReceipt(sale: Sale)
+}
 
-    fun calculateTotalPrices(sale: Sale) {
-        sale.salesList.forEach { it.tax += taxCalculator.getTaxes(it.article, sale.country) }
+class TaxPriceCalculator(private val receipt: Receipt) : PriceCalculator {
+
+    override fun calculateTotalPrices(sale: Sale) {
+        sale.salesList.forEach { it.tax += TaxCalculator().getTaxes(it.article, sale.country) }
         sale.salesList.forEach { it.taxedPrice = calculatePrice(it, it.tax) }
     }
 
-    fun printReceipt(sale: Sale) {
+    override fun printReceipt(sale: Sale) {
         receipt.totalPrice = 2.0
         receipt.totalTax = 2.0
         receipt.saleArticles = sale.salesList
@@ -78,9 +83,13 @@ class TaxCalculator{
     }
 }
 
-class SaleArticleRepository(private val dataSourceArticle: String) {
+interface ArticleRepository {
+    fun getSale(): Sale
+}
 
-    fun getSale(): Sale {
+class SaleArticleRepository(private val dataSourceArticle: String) : ArticleRepository {
+
+    override fun getSale(): Sale {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(dataSourceArticle, csvFormat)
         val listOfSaleArticles: List<SaleArticle> = csvParser.map { record ->
