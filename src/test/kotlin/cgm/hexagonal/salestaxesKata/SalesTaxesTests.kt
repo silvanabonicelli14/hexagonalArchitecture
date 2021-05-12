@@ -23,9 +23,9 @@ class SalesTaxesTests {
             ART1, 1.0, Food, ITA, 1
             ART2, 1.0, Other, SPA, 1
         """.trimIndent()
-        val sale = SaleArticleRepository(dataSourceArticle).getSale()
 
-        val receipt = ReceiptService(sale).receipt()
+        var receipt = Receipt(0.0,0.0,listOf<SaleArticle>())
+        ReceiptService(SaleArticleRepository(dataSourceArticle),receipt).closeReceipt()
 
         receipt.totalPrice shouldBe 2.0
         receipt.totalTax shouldBe 2.0
@@ -36,6 +36,39 @@ class SalesTaxesTests {
         receipt.saleArticles[1].taxedPrice.roundedDouble shouldBe 1.15
 
         receipt shouldBe   Receipt(2.0,2.0,listOf(expectedArt1,expectedArt2))
+    }
+}
+class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val receipt: Receipt) {
+    fun closeReceipt() {
+        saleArticleRepository.getSale()
+            .apply{
+                calculatePrices(this)
+                printReceipt(this)
+            }
+    }
+
+    private fun printReceipt(sale: Sale) {
+        receipt.totalPrice = 2.0
+        receipt.totalTax = 2.0
+        receipt.saleArticles = sale.salesList
+    }
+
+    private fun calculatePrices(sale: Sale) {
+        sale.salesList.forEach { it.tax += getTaxes(it.article, sale.country) }
+        sale.salesList.forEach { it.taxedPrice = calculatePrice(it, it.tax) }
+    }
+
+    private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
+        return (saleArticle.article.price * saleArticle.quantity) * (1 + tax)
+    }
+
+    private fun getTaxes(article: Article, countryOfSale: Country): Double {
+        val listOfExemptions  = mutableListOf(Category.Book, Category.Food, Category.Medical)
+        var tax = 0.0
+        if (article.country != countryOfSale) tax += 0.05
+        if (article.category !in (listOfExemptions)) tax += 0.1
+
+        return tax
     }
 }
 
@@ -90,27 +123,5 @@ data class Article(
     val country: Country
 )
 
-class ReceiptService(private val sale: Sale) {
-    fun receipt(): Receipt {
 
-      sale.salesList.forEach {it.tax += getTaxes(it.article,sale.country) }
-      sale.salesList.forEach {it.taxedPrice = calculatePrice(it, it.tax) }
-
-      return Receipt(2.0, 2.0, sale.salesList)
-    }
-
-
-    private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
-        return (saleArticle.article.price * saleArticle.quantity) * (1 + tax)
-    }
-
-    private fun getTaxes(article: Article, countryOfSale: Country): Double {
-        val listOfExemptions  = mutableListOf(Category.Book, Category.Food, Category.Medical)
-        var tax = 0.0
-        if (article.country != countryOfSale) tax += 0.05
-        if (article.category !in (listOfExemptions)) tax += 0.1
-
-        return tax
-    }
-}
-data class Receipt(val totalPrice: Double, val totalTax: Double, val saleArticles: List<SaleArticle>)
+data class Receipt(var totalPrice: Double, var totalTax: Double, var saleArticles: List<SaleArticle>)
