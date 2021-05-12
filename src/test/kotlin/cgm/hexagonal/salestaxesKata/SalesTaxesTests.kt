@@ -1,5 +1,7 @@
 package cgm.hexagonal.salestaxesKata
 
+import cgm.hexagonal.salestaxesKata.domain.doors.ArticleRepository
+import cgm.hexagonal.salestaxesKata.domain.doors.PriceCalculator
 import cgm.hexagonal.salestaxesKata.domain.models.*
 import io.kotest.matchers.shouldBe
 import org.apache.commons.csv.CSVFormat
@@ -49,11 +51,6 @@ class ReceiptService(private val saleArticleRepository: ArticleRepository, priva
     }
 }
 
-interface PriceCalculator {
-    fun calculateTotalPrices(sale: Sale)
-    fun printReceipt(sale: Sale)
-}
-
 class TaxPriceCalculator(private val receipt: Receipt) : PriceCalculator {
 
     override fun calculateTotalPrices(sale: Sale) {
@@ -81,10 +78,6 @@ class TaxCalculator{
 
         return tax
     }
-}
-
-interface ArticleRepository {
-    fun getSale(): Sale
 }
 
 class SaleArticleRepository(private val dataSourceArticle: String) : ArticleRepository {
