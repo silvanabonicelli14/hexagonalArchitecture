@@ -3,9 +3,8 @@ package cgm.hexagonal.salestaxesKata
 import io.kotest.matchers.shouldBe
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
+import org.apache.commons.csv.CSVRecord
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlin.math.roundToLong
 
 class SalesTaxesTests {
@@ -19,12 +18,12 @@ class SalesTaxesTests {
     @Test
     internal fun `create receipt`() {
 
-        val listOfArticles = """
+        val dataSourceArticle = """
             cod, price, category, country, quantity
             ART1, 1.0, Food, ITA, 1
             ART2, 1.0, Other, SPA, 1
         """.trimIndent()
-        val sale = getSale(listOfArticles)
+        val sale = SaleArticleRepository(dataSourceArticle).getSale()
 
         val receipt = ReceiptService(sale).receipt()
 
@@ -38,26 +37,29 @@ class SalesTaxesTests {
 
         receipt shouldBe   Receipt(2.0,2.0,listOf(expectedArt1,expectedArt2))
     }
+}
 
-    private fun getSale(listOfArticles: String): Sale {
+class SaleArticleRepository(private val dataSourceArticle: String) {
+
+    fun getSale(): Sale {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
-        val csvParser = CSVParser.parse(listOfArticles, csvFormat)
+        val csvParser = CSVParser.parse(dataSourceArticle, csvFormat)
         val listOfSaleArticles: List<SaleArticle> = csvParser.map { record ->
-            SaleArticle(
-                Article(
-                    record[0].trimIndent(),
-                    record[1].trimIndent().toDouble(),
-                    Category.valueOf(record[2].trimIndent()),
-                    Country(record[3].trimIndent())
-                ),
-                record[4].trimIndent().toDouble()
-            )
+            formatSale(record)
         }
         return Sale(Country("ITA"), listOfSaleArticles)
     }
+
+    private fun formatSale(record: CSVRecord) = SaleArticle(
+        Article(
+            record[0].trimIndent(),
+            record[1].trimIndent().toDouble(),
+            Category.valueOf(record[2].trimIndent()),
+            Country(record[3].trimIndent())
+        ),
+        record[4].trimIndent().toDouble()
+    )
 }
-
-
 
 enum class Category {
     Medical,
