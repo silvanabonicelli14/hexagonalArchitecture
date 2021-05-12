@@ -4,5 +4,5 @@ import cgm.hexagonal.salestaxesKata.domain.models.Sale
 
 interface PriceCalculator {
     fun calculateTotalPrices(sale: Sale)
-    fun printReceipt(sale: Sale)
+    fun closeReceipt(sale: Sale)
 }

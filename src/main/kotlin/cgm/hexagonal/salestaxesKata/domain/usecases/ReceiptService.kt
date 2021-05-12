@@ -11,7 +11,7 @@ class ReceiptService(
         saleArticleRepository.getSale()
             .apply {
                 priceCalculator.calculateTotalPrices(this)
-                priceCalculator.printReceipt(this)
+                priceCalculator.closeReceipt(this)
             }
     }
 }
