@@ -38,27 +38,14 @@ class SalesTaxesTests {
         receipt shouldBe   Receipt(2.0,2.0,listOf(expectedArt1,expectedArt2))
     }
 }
-class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val receipt: Receipt) {
-    fun closeReceipt() {
-        saleArticleRepository.getSale()
-            .apply{
-                calculatePrices(this)
-                printReceipt(this)
-            }
-    }
 
-    private fun printReceipt(sale: Sale) {
-        receipt.totalPrice = 2.0
-        receipt.totalTax = 2.0
-        receipt.saleArticles = sale.salesList
-    }
-
-    private fun calculatePrices(sale: Sale) {
+object PriceCalculator{
+     fun calculateTotalPrices(sale: Sale) {
         sale.salesList.forEach { it.tax += getTaxes(it.article, sale.country) }
         sale.salesList.forEach { it.taxedPrice = calculatePrice(it, it.tax) }
     }
 
-    private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
+     private fun calculatePrice(saleArticle: SaleArticle, tax: Double): Double {
         return (saleArticle.article.price * saleArticle.quantity) * (1 + tax)
     }
 
@@ -70,6 +57,24 @@ class ReceiptService(private val saleArticleRepository: SaleArticleRepository, p
 
         return tax
     }
+
+}
+
+class ReceiptService(private val saleArticleRepository: SaleArticleRepository, private val receipt: Receipt) {
+    fun closeReceipt() {
+        saleArticleRepository.getSale()
+            .apply{
+                PriceCalculator.calculateTotalPrices(this)
+                printReceipt(this)
+            }
+    }
+
+    private fun printReceipt(sale: Sale) {
+        receipt.totalPrice = 2.0
+        receipt.totalTax = 2.0
+        receipt.saleArticles = sale.salesList
+    }
+
 }
 
 class SaleArticleRepository(private val dataSourceArticle: String) {
