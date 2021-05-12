@@ -9,9 +9,6 @@ class ReceiptService(
 ) {
     fun closeReceipt() {
         saleArticleRepository.getSale()
-            .apply {
-                priceCalculator.calculateTotalPrices(this)
-                priceCalculator.closeReceipt(this)
-            }
+            .run {priceCalculator.closeReceipt(this)}
     }
 }
