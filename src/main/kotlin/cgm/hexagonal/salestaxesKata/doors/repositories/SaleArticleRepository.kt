@@ -8,13 +8,13 @@ import org.apache.commons.csv.CSVRecord
 
 class SaleArticleRepository(private val dataSourceArticle: String) : ArticleRepository {
 
-    override fun getSale(): Sale {
+    override fun getSale(country: Country): Sale {
         val csvFormat = CSVFormat.EXCEL.withDelimiter(',').withHeader()
         val csvParser = CSVParser.parse(dataSourceArticle, csvFormat)
         val listOfSaleArticles: List<SaleArticle> = csvParser.map { record ->
             formatSale(record)
         }
-        return Sale(Country("ITA"), listOfSaleArticles)
+        return Sale(country, listOfSaleArticles)
     }
 
     private fun formatSale(record: CSVRecord) = SaleArticle(

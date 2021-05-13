@@ -1,4 +1,4 @@
-package cgm.hexagonal.salestaxesKata.doors.taxcalculator
+package cgm.hexagonal.salestaxesKata.domain.usecases
 
 import cgm.hexagonal.salestaxesKata.domain.doors.PriceCalculator
 import cgm.hexagonal.salestaxesKata.domain.models.*
@@ -6,9 +6,9 @@ import cgm.hexagonal.salestaxesKata.doors.receiptprinter.ReceiptPrinter
 import kotlin.math.ceil
 import kotlin.math.roundToLong
 
-class ReceiptPriceCalculator(private val receiptPrinter: ReceiptPrinter, var receiptLines: MutableList<String>) : PriceCalculator {
+class ReceiptPriceCalculator() : PriceCalculator {
 
-    override fun closeReceipt(sale: Sale) {
+    override fun closeReceipt(sale: Sale): Receipt {
 
         val receipt = Receipt(0.0,0.0,listOf())
 
@@ -19,7 +19,7 @@ class ReceiptPriceCalculator(private val receiptPrinter: ReceiptPrinter, var rec
             receipt.totalTax += ((it.tax * it.article.price * it.quantity)).roundedToNearest05
         }
         receipt.saleArticles = sale.salesList
-        receiptLines = receiptPrinter.printReceipt(receipt) as MutableList<String>
+        return receipt
     }
 
     private fun calculateTaxedPrice(saleArticle: SaleArticle, tax: Double): Double {

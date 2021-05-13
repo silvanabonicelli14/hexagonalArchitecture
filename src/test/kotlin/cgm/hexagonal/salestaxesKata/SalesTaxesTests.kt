@@ -1,9 +1,9 @@
 package cgm.hexagonal.salestaxesKata
 
+import cgm.hexagonal.salestaxesKata.domain.usecases.ReceiptPriceCalculator
 import cgm.hexagonal.salestaxesKata.domain.usecases.ReceiptService
 import cgm.hexagonal.salestaxesKata.doors.receiptprinter.ReceiptTextPrinter
 import cgm.hexagonal.salestaxesKata.doors.repositories.SaleArticleRepository
-import cgm.hexagonal.salestaxesKata.doors.taxcalculator.ReceiptPriceCalculator
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -18,11 +18,15 @@ class SalesTaxesTests {
             ART2, 47.50, Other, DEU, 1
         """.trimIndent()
         val receiptLines = mutableListOf<String>()
-        val taxPriceCalculator = ReceiptPriceCalculator(ReceiptTextPrinter(),receiptLines)
+        val taxPriceCalculator = ReceiptPriceCalculator()
+        val receiptTextPrinter = ReceiptTextPrinter(receiptLines)
+        ReceiptService(
+            SaleArticleRepository(dataSourceArticle),
+            ReceiptPriceCalculator(),
+            receiptTextPrinter
+        ).closeReceipt("ITA")
 
-        ReceiptService(SaleArticleRepository(dataSourceArticle), taxPriceCalculator).closeReceipt()
-
-        taxPriceCalculator.receiptLines shouldBe listOf(
+        receiptTextPrinter.receiptLines shouldBe listOf(
             """
             ******************************
                 Total receipt 65.15

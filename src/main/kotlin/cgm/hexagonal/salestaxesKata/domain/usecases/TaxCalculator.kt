@@ -1,4 +1,4 @@
-package cgm.hexagonal.salestaxesKata.doors.taxcalculator
+package cgm.hexagonal.salestaxesKata.domain.usecases
 
 import cgm.hexagonal.salestaxesKata.domain.models.*
 

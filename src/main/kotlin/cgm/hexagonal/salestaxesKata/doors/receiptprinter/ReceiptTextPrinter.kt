@@ -3,12 +3,11 @@ package cgm.hexagonal.salestaxesKata.doors.receiptprinter
 import cgm.hexagonal.salestaxesKata.domain.models.Receipt
 
 interface ReceiptPrinter{
-    fun printReceipt(receipt: Receipt): List<String>
+    fun printReceipt(receipt: Receipt)
 }
 
-class ReceiptTextPrinter : ReceiptPrinter {
-    override fun printReceipt(receipt: Receipt): List<String> {
-        val receiptLines = mutableListOf<String>()
+class ReceiptTextPrinter(val receiptLines: MutableList<String>) : ReceiptPrinter {
+    override fun printReceipt(receipt: Receipt) {
         receiptLines.add(getTotalPriceLine(receipt.totalPrice.toString()))
         receiptLines.add(getTotalTaxLine(receipt.totalTax.toString()))
         receipt.saleArticles.forEach {
@@ -20,7 +19,6 @@ class ReceiptTextPrinter : ReceiptPrinter {
                 )
             )
         }
-        return receiptLines
     }
 
     private fun getTotalPriceLine(totalLine: String) =
