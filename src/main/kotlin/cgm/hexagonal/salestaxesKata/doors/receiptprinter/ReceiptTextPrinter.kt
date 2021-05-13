@@ -1,10 +1,13 @@
-package cgm.hexagonal.salestaxesKata.domain
+package cgm.hexagonal.salestaxesKata.doors.receiptprinter
 
 import cgm.hexagonal.salestaxesKata.domain.models.Receipt
 
-object TextReceiptTemplate{
+interface ReceiptPrinter{
+    fun printReceipt(receipt: Receipt): List<String>
+}
 
-    fun printReceipt(receipt: Receipt): List<String> {
+class ReceiptTextPrinter : ReceiptPrinter {
+    override fun printReceipt(receipt: Receipt): List<String> {
         val receiptLines = mutableListOf<String>()
         receiptLines.add(getTotalPriceLine(receipt.totalPrice.toString()))
         receiptLines.add(getTotalTaxLine(receipt.totalTax.toString()))
