@@ -24,6 +24,6 @@ class SaleArticleRepository(private val dataSourceArticle: String) : ArticleRepo
             Category.valueOf(record[2].trimIndent()),
             Country(record[3].trimIndent())
         ),
-        record[4].trimIndent().toDouble()
+        record[4].trimIndent().toInt()
     )
 }

@@ -20,21 +20,21 @@ object TextReceiptTemplate{
         return receiptLines
     }
 
-    fun getTotalPriceLine(totalLine: String) =
-        """
+    private fun getTotalPriceLine(totalLine: String) =
+            """
             ******************************
                 Total receipt $totalLine
             ******************************    
             """.trimIndent()
 
-    fun getTotalTaxLine(totalTax: String): String =
-        """
+    private fun getTotalTaxLine(totalTax: String): String =
+            """
                 Total tax $totalTax
             """.trimIndent()
 
-    fun getArticleLine(articleCode: String, quantity: String, price: String): String =
-        """
-                Article: $articleCode - Quantity: $quantity - Total: $price     
+    private fun getArticleLine(articleCode: String, quantity: String, price: String): String =
+            """
+                Article: $articleCode - Quantity: $quantity - Total: $price
             """.trimIndent()
 
 }
