@@ -10,7 +10,6 @@ import org.mockito.Mockito.times
 import org.mockito.Spy
 import org.mockito.junit.MockitoJUnitRunner
 
-
 @RunWith(MockitoJUnitRunner::class)
 class MokitoTests {
 
